@@ -50,22 +50,42 @@ namespace Fume
             Console.WriteLine($"Playing");
         }
 
+        static Dictionary<string, int> SkipHistory = new Dictionary<string, int>();
+        const int SkipThreshold = 3;
+
         static async void Skipped(object sender, FullTrack track)
         {
-            Console.WriteLine($"Skipped {track.Name}");
 
-            if (KickedTracks.Count(x=>((FullTrack)x.Track).Id==track.Id)==0)
+            if (SkipHistory.ContainsKey(track.Id))
             {
-                await Spotify.spotify.Playlists.AddItems(Kicked.Id, new PlaylistAddItemsRequest(new List<string>() { track.Uri }));
+                if (SkipHistory[track.Id] >= SkipThreshold)
+                {
+                    Console.WriteLine($"Removed {track.Name}");
 
-                KickedTracks.Add(new PlaylistTrack<IPlayableItem>());
-                KickedTracks.Last().Track = track;
+                    if (KickedTracks.Count(x => ((FullTrack)x.Track).Id == track.Id) == 0)
+                    {
+                        await Spotify.spotify.Playlists.AddItems(Kicked.Id, new PlaylistAddItemsRequest(new List<string>() { track.Uri }));
+
+                        KickedTracks.Add(new PlaylistTrack<IPlayableItem>());
+                        KickedTracks.Last().Track = track;
+                    }
+
+                    List<bool> Exists = await Spotify.spotify.Library.CheckTracks(new LibraryCheckTracksRequest(new List<string>() { track.Id }));
+                    if (Exists[0])
+                    {
+                        await Spotify.spotify.Library.RemoveTracks(new LibraryRemoveTracksRequest(new List<string>() { track.Id }));
+                    }
+                }
+                else
+                {
+                    SkipHistory[track.Id]++;
+                    Console.WriteLine($"Skipped {track.Name} For The {SkipHistory[track.Id]} Time");
+                }
             }
-
-            List<bool> Exists = await Spotify.spotify.Library.CheckTracks(new LibraryCheckTracksRequest(new List<string>() { track.Id }));
-            if (Exists[0])
+            else
             {
-                await Spotify.spotify.Library.RemoveTracks(new LibraryRemoveTracksRequest(new List<string>() { track.Id }));
+                SkipHistory.Add(track.Id, 1);
+                Console.WriteLine($"Skipped {track.Name} For The {SkipHistory[track.Id]} Time");
             }
         }
     }
