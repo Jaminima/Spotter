@@ -64,7 +64,7 @@ namespace Fume
         {
             if (SkipHistory.ContainsKey(track.Id))
             {
-                if (SkipHistory[track.Id] >= SkipThreshold)
+                if (SkipHistory[track.Id] >= SkipThreshold - 1)
                 {
                     Console.WriteLine($"Removed {track.Name}");
 
