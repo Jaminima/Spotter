@@ -2,7 +2,9 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.IO;
 using SpotifyAPI.Web;
+using Newtonsoft.Json.Linq;
 
 namespace Fume
 {
@@ -23,6 +25,11 @@ namespace Fume
 
         static async void InitKicked()
         {
+            if (File.Exists("./KickHistory.json")) { 
+                StreamReader stream = new StreamReader("./KickHistory.json");
+                SkipHistory = JToken.Parse(stream.ReadToEnd()).ToObject<Dictionary<string, int>>();
+            }
+
             string KickedName = $"Kicked Out {DateTime.Now.Year}";
 
             Paging<SimplePlaylist> playlists = await Spotify.spotify.Playlists.CurrentUsers();
@@ -55,7 +62,6 @@ namespace Fume
 
         static async void Skipped(object sender, FullTrack track)
         {
-
             if (SkipHistory.ContainsKey(track.Id))
             {
                 if (SkipHistory[track.Id] >= SkipThreshold)
@@ -87,6 +93,11 @@ namespace Fume
                 SkipHistory.Add(track.Id, 1);
                 Console.WriteLine($"Skipped {track.Name} For The {SkipHistory[track.Id]} Time");
             }
+
+            StreamWriter stream = new StreamWriter("./SkipHistory.json");
+            stream.Write(JToken.FromObject(SkipHistory));
+            stream.Flush();
+            stream.Close();
         }
     }
 }
