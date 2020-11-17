@@ -7,19 +7,15 @@ namespace Fume
 {
     public static class AutoSkipRemover
     {
-        #region Fields
-
-        private const int SkipThreshold = 3;
-
-        #endregion Fields
-
         #region Methods
 
         public static async void Skipped(object sender, FullTrack track)
         {
             User user = (User)sender;
 
-            if (user.SkipHistory.Count(x => x.trackId == track.Id) >= SkipThreshold - 1)
+            int recent = user.RecentSkips(track.Id);
+
+            if (recent >= user.SkipThreshold - 1)
             {
                 Console.WriteLine($"Removed {track.Name}");
 
@@ -40,7 +36,7 @@ namespace Fume
             else
             {
                 user.SkipHistory.Add(new Skip(track.Id));
-                Console.WriteLine($"Skipped {track.Name} For The {user.SkipHistory.Count(x => x.trackId == track.Id)} Time");
+                Console.WriteLine($"Skipped {track.Name} -- #{recent + 1}");
             }
         }
 

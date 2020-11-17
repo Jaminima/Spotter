@@ -1,6 +1,7 @@
 ﻿using SpotifyAPI.Web;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Fume
@@ -44,6 +45,8 @@ namespace Fume
 
         public List<Skip> SkipHistory = new List<Skip>();
 
+        public int SkipThreshold = 3;
+
         public SpotifyClient spotify;
 
         #endregion Fields
@@ -68,6 +71,12 @@ namespace Fume
         public async Task<PrivateUser> GetUser()
         {
             return await spotify.UserProfile.Current();
+        }
+
+        public int RecentSkips(string trackid)
+        {
+            DateTime After = DateTime.Now.AddDays(-7);
+            return SkipHistory.Count(x => x.trackId == trackid && x.when > After);
         }
     }
 }
