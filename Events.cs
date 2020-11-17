@@ -1,63 +1,72 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using SpotifyAPI.Web;
+using System;
 using System.Threading;
-using SpotifyAPI.Web;
 
 namespace Fume
 {
     public static class Events
     {
-        public static EventHandler<FullTrack> OnSkip;
-        public static EventHandler<CurrentlyPlayingContext> OnResume, OnPause;
+        #region Methods
 
-        public static void Start()
+        private static void CheckEvents()
         {
-            new Thread(async () => await CheckEvents()).Start();
-        }
-
-        private static async Task CheckEvents()
-        {
-            FullTrack lastTrack = null;
-            CurrentlyPlayingContext last = null;
-
             while (true)
             {
-                CurrentlyPlayingContext playing = await Spotify.spotify.Player.GetCurrentPlayback();
-
-                if (playing!=null)
+                foreach (User user in User.Users)
                 {
-                    if (lastTrack == null)
-                    {
-                        last = playing;
-                        lastTrack = (FullTrack)playing.Item;
-                    }
-                    else if (playing.Item!=null)
-                    {
-                        FullTrack track = (FullTrack)playing.Item;
-
-                        //Check if skipped
-                        if (track.Id != lastTrack.Id && last.ProgressMs < lastTrack.DurationMs - 5000)
-                        {
-                            OnSkip(null, lastTrack);
-                        }
-
-                        lastTrack = track;
-                    }
-
-                    //Check if play state changed
-                    if (playing.IsPlaying != last.IsPlaying)
-                    {
-                        if (playing.IsPlaying) OnResume(null, playing);
-                        else OnPause(null, playing);
-                    }
-
-                    last = playing;
+                    CheckUserEvent(user);
                 }
                 Thread.Sleep(1000);
             }
+        }
 
-                
+        private static async void CheckUserEvent(User user)
+        {
+            CurrentlyPlayingContext playing = await user.spotify.Player.GetCurrentPlayback();
+
+            if (playing != null)
+            {
+                if (user.lastTrack == null)
+                {
+                    user.last = playing;
+                    user.lastTrack = (FullTrack)playing.Item;
+                }
+                else if (playing.Item != null)
+                {
+                    FullTrack track = (FullTrack)playing.Item;
+
+                    //Check if skipped
+                    if (track.Id != user.lastTrack.Id && user.last.ProgressMs < user.lastTrack.DurationMs - 5000)
+                    {
+                        OnSkip(user, user.lastTrack);
+                    }
+
+                    user.lastTrack = track;
+                }
+
+                //Check if play state changed
+                if (playing.IsPlaying != user.last.IsPlaying)
+                {
+                    if (playing.IsPlaying) OnResume(user, playing);
+                    else OnPause(user, playing);
+                }
+
+                user.last = playing;
             }
         }
+
+        #endregion Methods
+
+        #region Fields
+
+        public static EventHandler<CurrentlyPlayingContext> OnResume, OnPause;
+        public static EventHandler<FullTrack> OnSkip;
+
+        #endregion Fields
+
+        public static void Start()
+        {
+            new Thread(() => CheckEvents()).Start();
+        }
     }
+}
