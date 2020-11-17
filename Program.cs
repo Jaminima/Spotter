@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using SpotifyAPI.Web;
-using System.Threading;
 
 namespace Fume
 {
@@ -8,49 +10,63 @@ namespace Fume
     {
         static void Main(string[] args)
         {
-            Ahh();
+            InitKicked();
+
+            Events.OnSkip = Skipped;
+            Events.OnPause = Pause;
+            Events.OnResume = Play;
+
+            Events.Start();
 
             while (true) { Console.ReadLine(); }
         }
 
-        static async void Ahh()
+        static async void InitKicked()
         {
-            SpotifyClient spotify = new SpotifyClient("BQAY8wl_z77A8C59rHzbt72IrAcHWX9DU9YL6y9To1hyKhxKL31mjslCvIe5TzwO9oL0z-PVoAFHPgdCMeUWnSeA1QVU_OR9KQ6PLiT8axN8l3s5Cvw8dZYx9lLt1mR6_MWIKHosyPWYZz-ZWCRg3RkxiQZ0V8eav45eMNXPaZlN8YEYKttnWxeqIIm0R4YthRKlig");
+            string KickedName = $"Kicked Out {DateTime.Now.Year}";
 
-            FullTrack lastTrack = null;
-            CurrentlyPlayingContext last = null;
+            Paging<SimplePlaylist> playlists = await Spotify.spotify.Playlists.CurrentUsers();
 
-            while (true)
+            Kicked = playlists.Items.Find(x => x.Name == KickedName);
+
+            if (Kicked == null)
             {
-                CurrentlyPlayingContext playing = await spotify.Player.GetCurrentPlayback();
+                FullPlaylist playlist = await Spotify.spotify.Playlists.Create((await Spotify.spotify.UserProfile.Current()).Id, new PlaylistCreateRequest(KickedName));
+                InitKicked();
+            }
+            else KickedTracks = (await Spotify.spotify.Playlists.GetItems(Kicked.Id)).Items;
+        }
 
+        static SimplePlaylist Kicked;
+        static List<PlaylistTrack<IPlayableItem>> KickedTracks;
 
-                if (lastTrack == null) {
-                    last = playing;
-                    lastTrack = (FullTrack)playing.Item;
-                }
-                else if (playing.IsPlaying)
-                {
-                    FullTrack track = (FullTrack)playing.Item;
+        static void Pause(object sender, CurrentlyPlayingContext track)
+        {
+            Console.WriteLine($"Paused");
+        }
 
-                    //Check if skipped
-                    if (track.Id != lastTrack.Id && last.ProgressMs < lastTrack.DurationMs)
-                    {
-                        Console.WriteLine($"You Skipped {lastTrack.Name}");
-                    }
+        static void Play(object sender, CurrentlyPlayingContext track)
+        {
+            Console.WriteLine($"Playing");
+        }
 
-                    last = playing;
-                    lastTrack = track;
-                }
+        static async void Skipped(object sender, FullTrack track)
+        {
+            Console.WriteLine($"Skipped {track.Name}");
 
-                Thread.Sleep(1000);
+            if (KickedTracks.Count(x=>((FullTrack)x.Track).Id==track.Id)==0)
+            {
+                await Spotify.spotify.Playlists.AddItems(Kicked.Id, new PlaylistAddItemsRequest(new List<string>() { track.Uri }));
+
+                KickedTracks.Add(new PlaylistTrack<IPlayableItem>());
+                KickedTracks.Last().Track = track;
             }
 
-            //await spotify.Player.ResumePlayback();
-
-            //var track = await spotify.Tracks.Get("1s6ux0lNiTziSrd7iUAADH");
-
-            //Console.WriteLine(track.Name);
+            List<bool> Exists = await Spotify.spotify.Library.CheckTracks(new LibraryCheckTracksRequest(new List<string>() { track.Id }));
+            if (Exists[0])
+            {
+                await Spotify.spotify.Library.RemoveTracks(new LibraryRemoveTracksRequest(new List<string>() { track.Id }));
+            }
         }
     }
 }
