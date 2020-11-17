@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Fume
 {
@@ -32,21 +33,25 @@ namespace Fume
 
         public static List<User> Users = new List<User>();
 
+        [JsonIgnore]
         public SimplePlaylist KickedPlaylist;
 
+        [JsonIgnore]
         public List<PlaylistTrack<IPlayableItem>> KickedTracks;
 
+        [JsonIgnore]
         public CurrentlyPlayingContext last = null;
 
+        [JsonIgnore]
         public FullTrack lastTrack = null;
 
-        //https://accounts.spotify.com/authorize?client_id=1da271b7266f4723bd37afa0ff58fe83&response_type=code&redirect_uri=http://localhost&scope=user-read-playback-state%20playlist-modify-public%20playlist-modify-private%20user-read-currently-playing%20user-library-modify%20user-read-playback-position%20playlist-read-private%20user-library-read
         public string refreshtoken, authtoken;
 
         public List<Skip> SkipHistory = new List<Skip>();
 
         public int SkipThreshold = 3;
 
+        [JsonIgnore]
         public SpotifyClient spotify;
 
         #endregion Fields

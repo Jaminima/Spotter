@@ -20,6 +20,8 @@ namespace Fume
             }
         }
 
+        const float IsntSkip = 0.9f;
+
         private static async void CheckUserEvent(User user)
         {
             CurrentlyPlayingContext playing = await user.spotify.Player.GetCurrentPlayback();
@@ -36,7 +38,7 @@ namespace Fume
                     FullTrack track = (FullTrack)playing.Item;
 
                     //Check if skipped
-                    if (track.Id != user.lastTrack.Id && user.last.ProgressMs < user.lastTrack.DurationMs - 5000)
+                    if (track.Id != user.lastTrack.Id && user.last.ProgressMs < user.lastTrack.DurationMs * IsntSkip)
                     {
                         OnSkip(user, user.lastTrack);
                     }
