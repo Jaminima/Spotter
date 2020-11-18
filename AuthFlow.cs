@@ -12,6 +12,34 @@ namespace Fume
 
         static string redirect = "http://localhost/";
 
+        public static void Refresh(User user)
+        {
+            WebRequest req = WebRequest.Create($"https://accounts.spotify.com/api/token");
+
+            req.ContentType = "application/x-www-form-urlencoded";
+            req.Method = "POST";
+
+            StreamWriter stream = new StreamWriter(req.GetRequestStream());
+            stream.Write($"grant_type=refresh_token&refresh_token={user.refreshtoken}&client_id={SpotifyAuthKeys.client_id}&client_secret={SpotifyAuthKeys.client_secret}");
+            stream.Flush();
+            stream.Close();
+
+            try
+            {
+                WebResponse res = req.GetResponse();
+
+                StreamReader reader = new StreamReader(res.GetResponseStream());
+                JToken data = JToken.Parse(reader.ReadToEnd());
+                AuthFlowResponse flowResponse = data.ToObject<AuthFlowResponse>();
+
+                user.authtoken = flowResponse.access_token;
+            }
+            catch (WebException e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
         public static User FromCode(string scode)
         {
             WebRequest req = WebRequest.Create($"https://accounts.spotify.com/api/token");
@@ -20,7 +48,7 @@ namespace Fume
             req.Method = "POST";
 
             StreamWriter stream = new StreamWriter(req.GetRequestStream());
-            stream.Write($"grant_type=authorization_code&code={scode}&redirect_uri={redirect}&client_id=1da271b7266f4723bd37afa0ff58fe83&client_secret=f868e8d7cd3146e285f33ea3859ae41a");
+            stream.Write($"grant_type=authorization_code&code={scode}&redirect_uri={redirect}&client_id={SpotifyAuthKeys.client_id}&client_secret={SpotifyAuthKeys.client_secret}");
             stream.Flush();
             stream.Close();
 
