@@ -45,29 +45,42 @@ namespace Fume
         [JsonIgnore]
         public FullTrack lastTrack = null;
 
-        public string refreshtoken, authtoken;
+        private string _authtoken;
+
+        public string authtoken
+        {
+            get { if (DateTime.Now > authExpires || _authtoken == null) AuthFlow.Refresh(this); return _authtoken; }
+            set { _authtoken = value; }
+        }
+
+        public string refreshtoken;
+
+        public DateTime authExpires = DateTime.MinValue;
 
         public List<Skip> SkipHistory = new List<Skip>();
 
         public int SkipThreshold = 3;
 
         [JsonIgnore]
-        public SpotifyClient spotify;
+        private SpotifyClient _spotify;
+
+        [JsonIgnore]
+        public SpotifyClient spotify
+        {
+            get { if (DateTime.Now > authExpires || _spotify==null) _spotify = new SpotifyClient(authtoken); return _spotify; }
+        }
 
         #endregion Fields
 
         #region Constructors
 
-        public User()
+        [JsonConstructor]
+        public User(string authtoken, string refreshtoken, DateTime authExpires)
         {
-            spotify = new SpotifyClient(authtoken);
-            SetupKicked();
-        }
-
-        public User(string authtoken)
-        {
-            this.authtoken = authtoken;
-            spotify = new SpotifyClient(authtoken);
+            this._authtoken = authtoken;
+            this.refreshtoken = refreshtoken;
+            this.authExpires = authExpires;
+            _spotify = new SpotifyClient(this.authtoken);
             SetupKicked();
         }
 

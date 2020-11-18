@@ -2,6 +2,7 @@
 using System;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Fume
 {
@@ -11,9 +12,11 @@ namespace Fume
 
         private static void Main(string[] args)
         {
-            User u = AuthFlow.FromCode("AQDib_RlxnXNB9dLTUYtEbVNInsx7oY_yQ6V5doJjZzpnZLkwA3S-KWv2Z6oWZxlAZuRj6NQy4eVQ8YsZcvIndSVLDbvJstYFQyL4_T5JdG4e0p8qr34_vGCj9OajkQPl_qpoNgrSefrxUBuwhsqMMer72xUP5O5A9vEGXJGnx2XL3GVYchKTX-CGCDf0m3GysHrs64j8SMQsyDwunJ5uQC70UhWTZ98aN0m7ANNoQCnElg4q3WCBhDasvmju6MULcbVeMiBkTZq1IZZdrJV_G5TrVwtA-Lx4VzmcauHwri23ItiMg65zIAs6u3cpXkast0TS98xRa7jpt2QBOv28wxEpju_cebVNEUHHVPh6k4yV1nTq2ZKuLhSXNsA9igO8q878qFNJw-P4qnVhR-b2tPMehZf59BBCQ");
+            //User u = AuthFlow.FromCode("AQCa_yD5tuo-cy39szWuf8lZiqk7XuHU7siChPB-0zgNkXb0eii2JpaYDgAAs_LDQKefPmPo7tykRegzvveUx9YhLOY5nCOzZX9xiDuQA-NcON0amdZbJImHTMOfj0arfzr8nuwH2vq2g7WKFq0FC_ishVQypXJa2R6pgeOkulnHc2r9Er-qgBR-Wd1vrqKPd65zDYAqpGPWyFFLXLKjt1GImOFLPgL4lzdQid-shr2HBHk2Qrkf5XIu52XdeZKSZXBe5OuyFIyjtDQMVeo8KMmx7fFHFuoZtGcnwFGDc3RXUYURTboWzdiV1XI6XmUA9Ocy_N7BmhRUlHzHtA7jrlC3CAwgmiLCetTmZM9fDUxCY5_Ry-QelHSjv16PGmqpcuLLzdasWf0izXimiKWsG8rvKUZtpoyOWg");
 
-            User.Users.Add(u);
+            //User.Users.Add(u);
+
+            User.Users = JToken.Parse(File.ReadAllText("Users.json")).ToObject<List<User>>();
 
             Events.OnSkip = AutoSkipRemover.Skipped;
             Events.OnPause = Pause;

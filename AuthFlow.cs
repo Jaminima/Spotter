@@ -33,6 +33,7 @@ namespace Fume
                 AuthFlowResponse flowResponse = data.ToObject<AuthFlowResponse>();
 
                 user.authtoken = flowResponse.access_token;
+                user.authExpires = DateTime.Now.AddSeconds(int.Parse(flowResponse.expires_in)).AddMinutes(-1);
             }
             catch (WebException e)
             {
@@ -60,7 +61,7 @@ namespace Fume
                 JToken data = JToken.Parse(reader.ReadToEnd());
                 AuthFlowResponse flowResponse = data.ToObject<AuthFlowResponse>();
 
-                return new User(flowResponse.access_token) { refreshtoken = flowResponse.refresh_token };
+                return new User(flowResponse.access_token, flowResponse.refresh_token, DateTime.Now.AddSeconds(int.Parse(flowResponse.expires_in)).AddMinutes(-1));
             }
             catch (WebException e)
             {
