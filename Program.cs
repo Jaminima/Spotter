@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Collections.Generic;
 
-namespace Fume
+namespace Spotter
 {
     internal class Program
     {

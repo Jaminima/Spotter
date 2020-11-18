@@ -2,7 +2,7 @@
 using System;
 using System.Threading;
 
-namespace Fume
+namespace Spotter
 {
     public static class Events
     {

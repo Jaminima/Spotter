@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Fume
+namespace Spotter
 {
     public class Skip
     {
