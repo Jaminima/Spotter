@@ -1,8 +1,8 @@
-﻿using SpotifyAPI.Web;
+﻿using Newtonsoft.Json.Linq;
+using SpotifyAPI.Web;
 using System;
-using Newtonsoft.Json.Linq;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Spotter
 {
@@ -16,7 +16,9 @@ namespace Spotter
 
             //User.Users.Add(u);
 
-            User.Users = JToken.Parse(File.ReadAllText("Users.json")).ToObject<List<User>>();
+            if (File.Exists("Users.json")) Memory.Users = JToken.Parse(File.ReadAllText("Users.json")).ToObject<List<User>>();
+
+            AuthListener.Start();
 
             Events.OnSkip = AutoSkipRemover.Skipped;
             Events.OnPause = Pause;
@@ -24,7 +26,7 @@ namespace Spotter
 
             Events.Start();
 
-            while (true) { Console.ReadLine(); File.WriteAllText("Users.json", JToken.FromObject(User.Users).ToString()); }
+            while (true) { Console.ReadLine(); File.WriteAllText("Users.json", JToken.FromObject(Memory.Users).ToString()); }
         }
 
         private static void Pause(object sender, CurrentlyPlayingContext track)

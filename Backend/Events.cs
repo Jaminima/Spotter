@@ -6,21 +6,25 @@ namespace Spotter
 {
     public static class Events
     {
+        #region Fields
+
+        private const float IsntSkip = 0.9f;
+
+        #endregion Fields
+
         #region Methods
 
         private static void CheckEvents()
         {
             while (true)
             {
-                foreach (User user in User.Users)
+                for (int i = 0; i < Memory.Users.Count; i++)
                 {
-                    CheckUserEvent(user);
+                    CheckUserEvent(Memory.Users[i]);
                 }
                 Thread.Sleep(1000);
             }
         }
-
-        const float IsntSkip = 0.9f;
 
         private static async void CheckUserEvent(User user)
         {
@@ -59,12 +63,8 @@ namespace Spotter
 
         #endregion Methods
 
-        #region Fields
-
         public static EventHandler<CurrentlyPlayingContext> OnResume, OnPause;
         public static EventHandler<FullTrack> OnSkip;
-
-        #endregion Fields
 
         public static void Start()
         {

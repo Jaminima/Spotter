@@ -1,14 +1,23 @@
-﻿using SpotifyAPI.Web;
+﻿using Newtonsoft.Json;
+using SpotifyAPI.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace Spotter
 {
     public class User
     {
+        #region Fields
+
+        private string _authtoken;
+
+        [JsonIgnore]
+        private SpotifyClient _spotify;
+
+        #endregion Fields
+
         #region Methods
 
         private async void SetupKicked()
@@ -27,11 +36,14 @@ namespace Spotter
             else KickedTracks = (await spotify.Playlists.GetItems(KickedPlaylist.Id)).Items;
         }
 
+        private async void SetUser()
+        {
+            this.userid = (await spotify.UserProfile.Current()).Id;
+        }
+
         #endregion Methods
 
-        #region Fields
-
-        public static List<User> Users = new List<User>();
+        public DateTime authExpires = DateTime.MinValue;
 
         [JsonIgnore]
         public SimplePlaylist KickedPlaylist;
@@ -45,34 +57,10 @@ namespace Spotter
         [JsonIgnore]
         public FullTrack lastTrack = null;
 
-        private string _authtoken;
-
-        public string authtoken
-        {
-            get { if (DateTime.Now > authExpires || _authtoken == null) AuthFlow.Refresh(this); return _authtoken; }
-            set { _authtoken = value; }
-        }
-
         public string refreshtoken;
-
-        public DateTime authExpires = DateTime.MinValue;
-
         public List<Skip> SkipHistory = new List<Skip>();
-
         public int SkipThreshold = 3;
-
-        [JsonIgnore]
-        private SpotifyClient _spotify;
-
-        [JsonIgnore]
-        public SpotifyClient spotify
-        {
-            get { if (DateTime.Now > authExpires || _spotify==null) _spotify = new SpotifyClient(authtoken); return _spotify; }
-        }
-
-        #endregion Fields
-
-        #region Constructors
+        public string userid;
 
         [JsonConstructor]
         public User(string authtoken, string refreshtoken, DateTime authExpires)
@@ -81,10 +69,21 @@ namespace Spotter
             this.refreshtoken = refreshtoken;
             this.authExpires = authExpires;
             _spotify = new SpotifyClient(this.authtoken);
+            SetUser();
             SetupKicked();
         }
 
-        #endregion Constructors
+        public string authtoken
+        {
+            get { if (DateTime.Now > authExpires || _authtoken == null) AuthFlow.Refresh(this); return _authtoken; }
+            set { _authtoken = value; }
+        }
+
+        [JsonIgnore]
+        public SpotifyClient spotify
+        {
+            get { if (DateTime.Now > authExpires || _spotify == null) _spotify = new SpotifyClient(authtoken); return _spotify; }
+        }
 
         public async Task<PrivateUser> GetUser()
         {
